@@ -74,7 +74,7 @@ if __name__ == '__main__':
     val_loss_pre, counter = 0, 0
 
     for epoch in tqdm(range(args.epochs)):
-        local_weights, local_losses = [], []
+        local_weights, local_losses, local_grads = [], [], []
         print(f'\n | Global Training Round : {epoch+1} |\n')
 
         global_model.train()
@@ -84,10 +84,15 @@ if __name__ == '__main__':
         for idx in idxs_users:
             local_model = LocalUpdate(args=args, dataset=train_dataset,
                                       idxs=user_groups[idx], logger=logger)
-            w, loss = local_model.update_weights(
+            w, loss, grads = local_model.update_weights(
                 model=copy.deepcopy(global_model), global_round=epoch)
             local_weights.append(copy.deepcopy(w))
             local_losses.append(copy.deepcopy(loss))
+            local_grads.append(copy.deepcopy(grads))
+
+        #Check if local_grads works
+        print("All grads: ", len(local_grads))
+        print("1 grads: ", len(local_grads[0]))
 
         # update global weights
         global_weights = average_weights(local_weights)

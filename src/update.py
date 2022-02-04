@@ -5,6 +5,7 @@
 import torch
 from torch import nn
 from torch.utils.data import DataLoader, Dataset
+import copy
 
 
 class DatasetSplit(Dataset):
@@ -32,6 +33,8 @@ class LocalUpdate(object):
         self.device = 'cuda' if int(args.gpu) != 0 else 'cpu'
         # Default criterion set to NLL loss function
         self.criterion = nn.NLLLoss().to(self.device)
+        #Add grads dictionary
+        self.grads = {}
 
     def train_val_test(self, dataset, idxs):
         """
@@ -56,6 +59,10 @@ class LocalUpdate(object):
         model.train()
         epoch_loss = []
 
+        #Extract gradients
+        for name, param in model.named_parameters():
+            self.grads[name.split(".")[0]] = []
+
         # Set optimizer for the local updates
         if self.args.optimizer == 'sgd':
             optimizer = torch.optim.SGD(model.parameters(), lr=self.args.lr,
@@ -73,6 +80,10 @@ class LocalUpdate(object):
                 log_probs = model(images)
                 loss = self.criterion(log_probs, labels)
                 loss.backward()
+                #Collect grads here!
+                if iter == self.args.local_ep - 1:
+                    model.stash_grads()
+                    self.grads = copy.deepcopy(model.grads)
                 optimizer.step()
 
                 if self.args.verbose and (batch_idx % 10 == 0):
@@ -84,7 +95,7 @@ class LocalUpdate(object):
                 batch_loss.append(loss.item())
             epoch_loss.append(sum(batch_loss)/len(batch_loss))
 
-        return model.state_dict(), sum(epoch_loss) / len(epoch_loss)
+        return model.state_dict(), sum(epoch_loss) / len(epoch_loss), self.grads
 
     def inference(self, model):
         """ Returns the inference accuracy and loss.
