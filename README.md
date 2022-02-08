@@ -59,6 +59,7 @@ The default values for various paramters parsed to the experiment are given in `
 * ```--iid:```      Distribution of data amongst users. Default set to IID. Set to 0 for non-IID.
 * ```--num_users:```Number of users. Default is 100.
 * ```--frac:```     Fraction of users to be used for federated updates. Default is 0.1.
+* ```--attack_frac:```     Fraction of malicous users in the federated learning. Default is 0.0.
 * ```--local_ep:``` Number of local training epochs in each user. Default is 10.
 * ```--local_bs:``` Batch size of local updates in each user. Default is 10.
 * ```--unequal:```  Used in non-iid setting. Option to split the data amongst users equally or unequally. Default set to 0 for equal splits. Set to 1 for unequal splits.

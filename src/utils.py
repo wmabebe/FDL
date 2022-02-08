@@ -69,7 +69,7 @@ def get_dataset(args):
                 # Chose euqal splits for every user
                 user_groups = mnist_noniid(train_dataset, args.num_users)
 
-    return train_dataset, test_dataset, user_groups
+    return list(train_dataset), test_dataset, user_groups
 
 
 def average_weights(w):
@@ -97,6 +97,7 @@ def exp_details(args):
     else:
         print('    Non-IID')
     print(f'    Fraction of users  : {args.frac}')
+    print(f'    Fraction of attackers  : {args.attack_frac}')
     print(f'    Local Batch size   : {args.local_bs}')
     print(f'    Local Epochs       : {args.local_ep}\n')
     return

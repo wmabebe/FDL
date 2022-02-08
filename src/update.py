@@ -25,22 +25,31 @@ class DatasetSplit(Dataset):
 
 
 class LocalUpdate(object):
-    def __init__(self, args, dataset, idxs, logger):
+    def __init__(self, args, dataset, idxs, logger,attacker=False):
         self.args = args
         self.logger = logger
         self.trainloader, self.validloader, self.testloader = self.train_val_test(
-            dataset, list(idxs))
+            dataset, list(idxs),attacker)
         self.device = 'cuda' if int(args.gpu) != 0 else 'cpu'
         # Default criterion set to NLL loss function
         self.criterion = nn.NLLLoss().to(self.device)
         #Add grads dictionary
         self.grads = {}
 
-    def train_val_test(self, dataset, idxs):
+    def train_val_test(self, dataset, idxs, attacker):
         """
         Returns train, validation and test dataloaders for a given dataset
         and user indexes.
         """
+        #Spoil data for malicous users (attackers)
+        if attacker:
+            #Label flipping (increment by one) for cifar/mnist dataset
+            for i in idxs:
+                print ("Sample label:", dataset[i][1])
+                print ("dataset type:", type(dataset))
+                print ("dataset[i] type:", type(dataset[i]))
+                dataset[i][1] = (dataset[i][1] + 1) % 10
+
         # split indexes for train, validation, and test (80, 10, 10)
         idxs_train = idxs[:int(0.8*len(idxs))]
         idxs_val = idxs[int(0.8*len(idxs)):int(0.9*len(idxs))]

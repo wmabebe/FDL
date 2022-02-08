@@ -37,6 +37,17 @@ if __name__ == '__main__':
     # load dataset and user groups
     train_dataset, test_dataset, user_groups = get_dataset(args)
 
+    #Randomly set attackers
+    attackers = []
+    if float(args.attack_frac) > 0:
+        #Make train_dataset mutable for pertrubation
+        for i in range(len(train_dataset)):
+            train_dataset[i] = list(train_dataset[i])
+        #Randomly select malicous users
+        num_attackers = int(args.attack_frac * args.num_users)
+        attackers = list(np.random.choice(range(args.num_users), num_attackers, replace=False))
+    print ("Attackers: ", attackers)
+
     # BUILD MODEL
     if args.model == 'cnn':
         # Convolutional neural netork
@@ -72,6 +83,7 @@ if __name__ == '__main__':
     cv_loss, cv_acc = [], []
     print_every = 2
     val_loss_pre, counter = 0, 0
+    total_grads = []
 
     for epoch in tqdm(range(args.epochs)):
         local_weights, local_losses, local_grads = [], [], []
@@ -82,8 +94,9 @@ if __name__ == '__main__':
         idxs_users = np.random.choice(range(args.num_users), m, replace=False)
 
         for idx in idxs_users:
+            malicous = True if idx in attackers else False
             local_model = LocalUpdate(args=args, dataset=train_dataset,
-                                      idxs=user_groups[idx], logger=logger)
+                                      idxs=user_groups[idx], logger=logger,attacker=malicous)
             w, loss, grads = local_model.update_weights(
                 model=copy.deepcopy(global_model), global_round=epoch)
             local_weights.append(copy.deepcopy(w))
@@ -91,8 +104,10 @@ if __name__ == '__main__':
             local_grads.append(copy.deepcopy(grads))
 
         #Check if local_grads works
-        print("All grads: ", len(local_grads))
-        print("1 grads: ", len(local_grads[0]))
+        total_grads.append(copy.deepcopy(local_grads))
+        print("1 device grad size: ", len(local_grads[0]))
+        print("Round", epoch," grads: ", len(local_grads))
+        print("Total grads: ", len(total_grads))
 
         # update global weights
         global_weights = average_weights(local_weights)
@@ -103,15 +118,16 @@ if __name__ == '__main__':
         loss_avg = sum(local_losses) / len(local_losses)
         train_loss.append(loss_avg)
 
-        # Calculate avg training accuracy over all users at every epoch
+        # Calculate avg training accuracy over all non-malicous users at every epoch
         list_acc, list_loss = [], []
         global_model.eval()
         for c in range(args.num_users):
-            local_model = LocalUpdate(args=args, dataset=train_dataset,
-                                      idxs=user_groups[idx], logger=logger)
-            acc, loss = local_model.inference(model=global_model)
-            list_acc.append(acc)
-            list_loss.append(loss)
+            if c not in attackers:
+                local_model = LocalUpdate(args=args, dataset=train_dataset,
+                                        idxs=user_groups[idx], logger=logger)
+                acc, loss = local_model.inference(model=global_model)
+                list_acc.append(acc)
+                list_loss.append(loss)
         train_accuracy.append(sum(list_acc)/len(list_acc))
 
         # print global training loss after every 'i' rounds
@@ -128,12 +144,15 @@ if __name__ == '__main__':
     print("|---- Test Accuracy: {:.2f}%".format(100*test_acc))
 
     # Saving the objects train_loss and train_accuracy:
-    file_name = './save/objects/{}_{}_{}_C[{}]_iid[{}]_E[{}]_B[{}].pkl'.\
+    file_name = './save/objects/{}_{}_{}_C[{}]_iid[{}]_E[{}]_B[{}]'.\
         format(args.dataset, args.model, args.epochs, args.frac, args.iid,
                args.local_ep, args.local_bs)
 
-    with open(file_name, 'wb') as f:
+    with open(file_name + ".pkl", 'wb') as f:
         pickle.dump([train_loss, train_accuracy], f)
+    
+    with open(file_name + "_grads.pkl", 'wb') as f:
+        pickle.dump(total_grads,f)
 
     print('\n Total Run Time: {0:0.4f}'.format(time.time()-start_time))
 
