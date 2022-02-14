@@ -15,7 +15,7 @@ class MLP(nn.Module):
         self.dropout = nn.Dropout()
         self.layer_hidden = nn.Linear(dim_hidden, dim_out)
         self.softmax = nn.Softmax(dim=1)
-        self.grads = {'layer_input':[],'relu':[],'layer_hidden':[],'softmax':[]}
+        self.grads = {'layer_input':None,'relu':None,'layer_hidden':None,'softmax':None}
 
     def forward(self, x):
         x = x.view(-1, x.shape[1]*x.shape[-2]*x.shape[-1])
@@ -26,10 +26,10 @@ class MLP(nn.Module):
         return self.softmax(x)
     
     def stash_grads(self):
-        self.grads['layer_input'].append(np.copy(self.layer_input.weight.grad.numpy()))
-        self.grads['relu'].append(np.copy(self.relu.weight.grad.numpy()))
-        self.grads['layer_hidden'].append(np.copy(self.layer_hidden.weight.grad.numpy()))
-        self.grads['softmax'].append(np.copy(self.softmax.weight.grad.numpy()))
+        self.grads['layer_input'] = np.copy(self.layer_input.weight.grad.numpy())
+        self.grads['relu'] = np.copy(self.relu.weight.grad.numpy())
+        self.grads['layer_hidden'] = np.copy(self.layer_hidden.weight.grad.numpy())
+        self.grads['softmax'] = np.copy(self.softmax.weight.grad.numpy())
 
 
 class CNNMnist(nn.Module):
@@ -40,7 +40,7 @@ class CNNMnist(nn.Module):
         self.conv2_drop = nn.Dropout2d()
         self.fc1 = nn.Linear(320, 50)
         self.fc2 = nn.Linear(50, args.num_classes)
-        self.grads = {'conv1':[],'conv2':[],'fc1':[],'fc2':[]}
+        self.grads = {'conv1':None,'conv2':None}
 
     def forward(self, x):
         x = F.relu(F.max_pool2d(self.conv1(x), 2))
@@ -52,10 +52,8 @@ class CNNMnist(nn.Module):
         return F.log_softmax(x, dim=1)
     
     def stash_grads(self):
-        self.grads['conv1'].append(np.copy(self.conv1.weight.grad.numpy()))
-        self.grads['conv2'].append(np.copy(self.conv2.weight.grad.numpy()))
-        self.grads['fc1'].append(np.copy(self.fc1.weight.grad.numpy()))
-        self.grads['fc2'].append(np.copy(self.fc2.weight.grad.numpy()))
+        self.grads['conv1'] = np.copy(self.conv1.weight.grad.numpy())
+        self.grads['conv2'] = np.copy(self.conv1.weight.grad.numpy())
 
 
 class CNNFashion_Mnist(nn.Module):
@@ -72,7 +70,7 @@ class CNNFashion_Mnist(nn.Module):
             nn.ReLU(),
             nn.MaxPool2d(2))
         self.fc = nn.Linear(7*7*32, 10)
-        self.grads = {'conv1':[],'relu1':[],'conv2':[],'relu2':[],'fc':[]}
+        self.grads = {'conv1':None,'relu1':None,'conv2':None,'relu2':None}
 
     def forward(self, x):
         out = self.layer1(x)
@@ -82,11 +80,10 @@ class CNNFashion_Mnist(nn.Module):
         return out
     
     def stash_grads(self):
-        self.grads['conv1'].append(np.copy(self.layer1[0].weight.grad.numpy()))
-        self.grads['relu1'].append(np.copy(self.layer1[2].weight.grad.numpy()))
-        self.grads['conv2'].append(np.copy(self.layer2[0].weight.grad.numpy()))
-        self.grads['relu2'].append(np.copy(self.layer2[2].weight.grad.numpy()))
-        self.grads['fc'].append(np.copy(self.fc.weight.grad.numpy()))
+        self.grads['conv1'] = np.copy(self.conv1.weight.grad.numpy())
+        self.grads['relu1'] = np.copy(self.relu1.weight.grad.numpy())
+        self.grads['conv2'] = np.copy(self.conv2.weight.grad.numpy())
+        self.grads['relu2'] = np.copy(self.relu2.weight.grad.numpy())
 
 class CNNCifar(nn.Module):
     def __init__(self, args):
@@ -97,7 +94,7 @@ class CNNCifar(nn.Module):
         self.fc1 = nn.Linear(16 * 5 * 5, 120)
         self.fc2 = nn.Linear(120, 84)
         self.fc3 = nn.Linear(84, args.num_classes)
-        self.grads = {'conv1':[],'conv2':[],'fc1':[],'fc2':[],'fc3':[]}
+        self.grads = {'conv1':None,'conv2':None}
 
     def forward(self, x):
         x = self.pool(F.relu(self.conv1(x)))
@@ -109,11 +106,11 @@ class CNNCifar(nn.Module):
         return F.log_softmax(x, dim=1)
     
     def stash_grads(self):
-        self.grads['conv1'].append(np.copy(self.conv1.weight.grad.numpy()))
-        self.grads['conv2'].append(np.copy(self.conv2.weight.grad.numpy()))
-        self.grads['fc1'].append(np.copy(self.fc1.weight.grad.numpy()))
-        self.grads['fc2'].append(np.copy(self.fc2.weight.grad.numpy()))
-        self.grads['fc3'].append(np.copy(self.fc3.weight.grad.numpy()))
+        self.grads['conv1'] = np.copy(self.conv1.weight.grad.numpy())
+        self.grads['conv2'] = np.copy(self.conv2.weight.grad.numpy())
+        # self.grads['fc1'].append(np.copy(self.fc1.weight.grad.numpy()))
+        # self.grads['fc2'].append(np.copy(self.fc2.weight.grad.numpy()))
+        # self.grads['fc3'].append(np.copy(self.fc3.weight.grad.numpy()))
 
 class modelC(nn.Module):
     def __init__(self, input_size, n_classes=10, **kwargs):
@@ -128,7 +125,8 @@ class modelC(nn.Module):
         self.conv8 = nn.Conv2d(192, 192, 1)
 
         self.class_conv = nn.Conv2d(192, n_classes, 1)
-        self.grads = {'conv1':[],'conv2':[],'conv3':[],'conv4':[],'conv5':[],'conv6':[],'conv7':[],'conv8':[],'class_conv':[],}
+        self.grads = {'conv1':None,'conv2':None,'conv3':None,'conv4':None,'conv5':None,
+                    'conv6':None,'conv7':None,'conv8':None,'class_conv':None}
 
     def forward(self, x):
         x_drop = F.dropout(x, .2)
@@ -150,12 +148,12 @@ class modelC(nn.Module):
         return pool_out
 
     def stash_grads(self):
-        self.grads['conv1'].append(np.copy(self.conv1.weight.grad.numpy()))
-        self.grads['conv2'].append(np.copy(self.conv2.weight.grad.numpy()))
-        self.grads['conv3'].append(np.copy(self.conv3.weight.grad.numpy()))
-        self.grads['conv4'].append(np.copy(self.conv4.weight.grad.numpy()))
-        self.grads['conv5'].append(np.copy(self.conv5.weight.grad.numpy()))
-        self.grads['conv6'].append(np.copy(self.conv6.weight.grad.numpy()))
-        self.grads['conv7'].append(np.copy(self.conv7.weight.grad.numpy()))
-        self.grads['conv8'].append(np.copy(self.conv8.weight.grad.numpy()))
-        self.grads['class_conv'].append(np.copy(self.class_conv.weight.grad.numpy()))
+        self.grads['conv1'] = np.copy(self.conv1.weight.grad.numpy())
+        self.grads['conv2'] = np.copy(self.conv2.weight.grad.numpy())
+        self.grads['conv3'] = np.copy(self.conv3.weight.grad.numpy())
+        self.grads['conv4'] = np.copy(self.conv4.weight.grad.numpy())
+        self.grads['conv5'] = np.copy(self.conv5.weight.grad.numpy())
+        self.grads['conv6'] = np.copy(self.conv6.weight.grad.numpy())
+        self.grads['conv7'] = np.copy(self.conv7.weight.grad.numpy())
+        self.grads['conv8'] = np.copy(self.conv8.weight.grad.numpy())
+        self.grads['class_conv'] = np.copy(self.class_conv.weight.grad.numpy())

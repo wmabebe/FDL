@@ -86,7 +86,7 @@ if __name__ == '__main__':
     total_grads = []
 
     for epoch in tqdm(range(args.epochs)):
-        local_weights, local_losses, local_grads = [], [], []
+        local_weights, local_losses, local_grads = [], [], {}
         print(f'\n | Global Training Round : {epoch+1} |\n')
 
         global_model.train()
@@ -101,7 +101,8 @@ if __name__ == '__main__':
                 model=copy.deepcopy(global_model), global_round=epoch)
             local_weights.append(copy.deepcopy(w))
             local_losses.append(copy.deepcopy(loss))
-            local_grads.append(copy.deepcopy(grads))
+            #Append current user grads to local grads together with the label
+            local_grads[idx] = [copy.deepcopy(grads),int(malicous)]
 
         #Check if local_grads works
         total_grads.append(copy.deepcopy(local_grads))
@@ -144,9 +145,9 @@ if __name__ == '__main__':
     print("|---- Test Accuracy: {:.2f}%".format(100*test_acc))
 
     # Saving the objects train_loss and train_accuracy:
-    file_name = './save/objects/{}_{}_{}_C[{}]_iid[{}]_E[{}]_B[{}]'.\
-        format(args.dataset, args.model, args.epochs, args.frac, args.iid,
-               args.local_ep, args.local_bs)
+    file_name = './save/objects/{}_{}_users[{}]_rounds[{}]_frac[{}]_iid[{}]_local_ep[{}]_local_bs[{}]_attck_frac[{}]'.\
+        format(args.dataset, args.model, args.num_users, args.epochs, args.frac, args.iid,
+               args.local_ep, args.local_bs,args.attack_frac)
 
     with open(file_name + ".pkl", 'wb') as f:
         pickle.dump([train_loss, train_accuracy], f)

@@ -45,9 +45,6 @@ class LocalUpdate(object):
         if attacker:
             #Label flipping (increment by one) for cifar/mnist dataset
             for i in idxs:
-                print ("Sample label:", dataset[i][1])
-                print ("dataset type:", type(dataset))
-                print ("dataset[i] type:", type(dataset[i]))
                 dataset[i][1] = (dataset[i][1] + 1) % 10
 
         # split indexes for train, validation, and test (80, 10, 10)
