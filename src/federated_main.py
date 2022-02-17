@@ -106,7 +106,8 @@ if __name__ == '__main__':
 
         #Check if local_grads works
         total_grads.append(copy.deepcopy(local_grads))
-        print("1 device grad size: ", len(local_grads[0]))
+        sample_idx  = list(local_grads.keys())[0]
+        print("1 device grad size: ", len( local_grads[sample_idx] ))
         print("Round", epoch," grads: ", len(local_grads))
         print("Total grads: ", len(total_grads))
 
