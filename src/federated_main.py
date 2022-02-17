@@ -158,26 +158,30 @@ if __name__ == '__main__':
     print('\n Total Run Time: {0:0.4f}'.format(time.time()-start_time))
 
     # PLOTTING (optional)
-    # import matplotlib
-    # import matplotlib.pyplot as plt
-    # matplotlib.use('Agg')
+    import matplotlib
+    import matplotlib.pyplot as plt
+    matplotlib.use('Agg')
+
+    file_name_loss = './save/plots/{}_{}_users[{}]_rounds[{}]_frac[{}]_iid[{}]_local_ep[{}]_local_bs[{}]_attck_frac[{}]_loss.png'.\
+        format(args.dataset, args.model, args.num_users, args.epochs, args.frac, args.iid,
+               args.local_ep, args.local_bs,args.attack_frac)
+    
+    file_name_acc = './save/plots/{}_{}_users[{}]_rounds[{}]_frac[{}]_iid[{}]_local_ep[{}]_local_bs[{}]_attck_frac[{}]_acc.png'.\
+        format(args.dataset, args.model, args.num_users, args.epochs, args.frac, args.iid,
+               args.local_ep, args.local_bs,args.attack_frac)
 
     # Plot Loss curve
-    # plt.figure()
-    # plt.title('Training Loss vs Communication rounds')
-    # plt.plot(range(len(train_loss)), train_loss, color='r')
-    # plt.ylabel('Training loss')
-    # plt.xlabel('Communication Rounds')
-    # plt.savefig('../save/fed_{}_{}_{}_C[{}]_iid[{}]_E[{}]_B[{}]_loss.png'.
-    #             format(args.dataset, args.model, args.epochs, args.frac,
-    #                    args.iid, args.local_ep, args.local_bs))
-    #
-    # # Plot Average Accuracy vs Communication rounds
-    # plt.figure()
-    # plt.title('Average Accuracy vs Communication rounds')
-    # plt.plot(range(len(train_accuracy)), train_accuracy, color='k')
-    # plt.ylabel('Average Accuracy')
-    # plt.xlabel('Communication Rounds')
-    # plt.savefig('../save/fed_{}_{}_{}_C[{}]_iid[{}]_E[{}]_B[{}]_acc.png'.
-    #             format(args.dataset, args.model, args.epochs, args.frac,
-    #                    args.iid, args.local_ep, args.local_bs))
+    plt.figure()
+    plt.title('Training Loss vs Communication rounds')
+    plt.plot(range(len(train_loss)), train_loss, color='r')
+    plt.ylabel('Training loss')
+    plt.xlabel('Communication Rounds')
+    plt.savefig(file_name_loss)
+    
+    # Plot Average Accuracy vs Communication rounds
+    plt.figure()
+    plt.title('Average Accuracy vs Communication rounds')
+    plt.plot(range(len(train_accuracy)), train_accuracy, color='k')
+    plt.ylabel('Average Accuracy')
+    plt.xlabel('Communication Rounds')
+    plt.savefig(file_name_acc)
