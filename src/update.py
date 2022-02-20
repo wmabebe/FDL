@@ -5,6 +5,7 @@
 import torch
 from torch import nn
 from torch.utils.data import DataLoader, Dataset
+import random
 import copy
 
 
@@ -43,9 +44,10 @@ class LocalUpdate(object):
         """
         #Spoil data for malicous users (attackers)
         if attacker:
+            attack_offset = random.randint(1,9)
             #Label flipping (increment by one) for cifar/mnist dataset
             for i in idxs:
-                dataset[i][1] = (dataset[i][1] + 1) % 10
+                dataset[i][1] = (dataset[i][1] + attack_offset) % 10
 
         # split indexes for train, validation, and test (80, 10, 10)
         idxs_train = idxs[:int(0.8*len(idxs))]
