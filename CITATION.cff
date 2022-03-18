@@ -1,0 +1,8 @@
+cff-version: 1.2.0
+message: "This projected was forked from https://github.com/AshwinRJ/Federated-Learning-PyTorch."
+authors:
+  - family-names: Abebe
+    given-names: Waqwoya
+title: "Federated Learning using PyTorch"
+version: 1.0.1
+date-released: 2022-01-30
