@@ -11,6 +11,9 @@ import numpy as np
 from tqdm import tqdm
 import random
 from node import *
+import datetime
+import matplotlib
+import matplotlib.pyplot as plt
 
 import torch
 from tensorboardX import SummaryWriter
@@ -18,7 +21,7 @@ from tensorboardX import SummaryWriter
 from options import args_parser
 from update import LocalUpdate, test_inference, ripple_updates
 from models import MLP, CNNMnist, CNNFashion_Mnist, CNNCifar, vgg11
-from utils import get_dataset, average_weights, exp_details, average_gradients
+from utils import get_dataset, exp_details, average_gradients
 from node import color_graph
 
 
@@ -33,23 +36,28 @@ if __name__ == '__main__':
     exp_details(args)
     print("args: ", args)
 
-    #Create output directory
-    dir_path = './save/{}_{}_users[{}]_rounds[{}]_frac[{}]_iid[{}]_local_ep[{}]_local_bs[{}]_attck_frac[{}]/'.format(args.dataset, args.model, args.num_users, args.epochs, args.frac, args.iid,
-               args.local_ep, args.local_bs,args.attack_frac)
-    os.makedirs(os.path.dirname(dir_path), exist_ok=True)
-
     # if args.gpu_id:
     #     torch.cuda.set_device(args.gpu_id)
-    device = 'cuda' if args.gpu != None and int(args.gpu) != 0 else 'cpu'
+    #device = 'cuda' if args.gpu != None and int(args.gpu) != 0 else 'cpu'
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print("Device: ",device)
 
     # load dataset and user groups
     train_dataset, test_dataset, user_groups = get_dataset(args)
 
-    MAX_PEERS = 3
+    MAX_PEERS = args.max_peers
     NODES = args.num_users
-    NON_IID_FRAC = 0.3
+    OPPOSIT_FRAC = args.opposit_frac
+    NOW = str(datetime.datetime.now()).replace(" ","--")
+    IID = "IID" if args.iid == "1" else "NON-IID"
 
+    #Create output directory
+    dir_path = './save/{}_{}_{}_{}_nodes[{}]_maxpeers[{}]_rounds[{}]_noniidfrac[{}]_frac[{}]_local_ep[{}]_local_bs[{}]_attck_frac[{}]/'. \
+        format(NOW,args.dataset, args.model, IID, NODES, MAX_PEERS, args.epochs,OPPOSIT_FRAC, args.frac,args.local_ep, args.local_bs,args.attack_frac)
+    os.makedirs(os.path.dirname(dir_path), exist_ok=True)
+
+    #Initialize the p2p graph
     adj_list = [Node(i,None,None,MAX_PEERS) for i in range(NODES)]
 
     for idx,node in enumerate(adj_list):
@@ -156,7 +164,7 @@ if __name__ == '__main__':
         colors = color_graph(adj_list,global_gradient)
         
         #Update p2p nodes
-        ripple_updates(adj_list,epoch,colors,dir_path,NON_IID_FRAC)
+        ripple_updates(adj_list,epoch,colors,dir_path,OPPOSIT_FRAC)
 
         loss_avg = sum(local_losses) / len(local_losses)
         train_loss.append(loss_avg)
@@ -190,9 +198,15 @@ if __name__ == '__main__':
     avg_test_acc /= len(adj_list)
     avg_test_loss /= len(adj_list)
 
-    print(f' \n Results after {args.epochs} global rounds of training:')
-    print("|---- Avg Train Accuracy: {:.2f}%".format(100*train_accuracy[-1]))
-    print("|---- Test Accuracy: {:.2f}%".format(100*avg_test_acc))
+    summary = "Results after " + str(args.epochs) + "global rounds of training:" + \
+             "\n|---- Avg Train Accuracy: {:.2f}%".format(100*train_accuracy[-1]) + \
+            "\n|---- Avg Test Accuracy: {:.2f}%".format(100*avg_test_acc)
+    
+    print(summary)
+
+    #Write summary to file
+    with open(dir_path + "summary.txt","w") as f:
+        f.write(summary)
 
     # Saving the objects train_loss and train_accuracy:
     with open(dir_path + "train-loss-accuracy.pkl", 'wb') as f:
@@ -204,17 +218,7 @@ if __name__ == '__main__':
     print('\n Total Run Time: {0:0.4f}'.format(time.time()-start_time))
 
     # PLOTTING (optional)
-    import matplotlib
-    import matplotlib.pyplot as plt
     matplotlib.use('Agg')
-
-    file_name_loss = './save/plots/{}_{}_users[{}]_rounds[{}]_frac[{}]_iid[{}]_local_ep[{}]_local_bs[{}]_attck_frac[{}]_loss.png'.\
-        format(args.dataset, args.model, args.num_users, args.epochs, args.frac, args.iid,
-               args.local_ep, args.local_bs,args.attack_frac)
-    
-    file_name_acc = './save/plots/{}_{}_users[{}]_rounds[{}]_frac[{}]_iid[{}]_local_ep[{}]_local_bs[{}]_attck_frac[{}]_acc.png'.\
-        format(args.dataset, args.model, args.num_users, args.epochs, args.frac, args.iid,
-               args.local_ep, args.local_bs,args.attack_frac)
 
     # Plot Loss curve
     plt.figure()

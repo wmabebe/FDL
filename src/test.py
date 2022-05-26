@@ -8,7 +8,7 @@ import networkx as nx
 
 MAX_PEERS = 3
 LIFETIME = 4
-NON_IID_FRAC = 0.3
+OPPOSIT_FRAC = 0.3
 NODES = 20
 
 adj_list = [Node(i,None,None,MAX_PEERS) for i in range(NODES)]
@@ -30,9 +30,9 @@ while life <= LIFETIME:
     print("###### TRAIN STEP #########")
     #Train every node
     for node in adj_list:
-        node.next_candidates()
+        node.next_candidates(sort="id")
     for node in adj_list:
-        node.next_peers(non_iid_frac=NON_IID_FRAC)
+        node.next_peers(non_iid_frac=OPPOSIT_FRAC)
     graph = build_graph(adj_list,nx.DiGraph())
     draw_graph(graph,"G" + str(life) + ".png",color_graph(adj_list))
     # for node in graph:

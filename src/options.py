@@ -8,7 +8,7 @@ import argparse
 def args_parser():
     parser = argparse.ArgumentParser()
 
-    # federated arguments (Notation for the arguments followed from paper)
+    #FDL arguments (Notation for the arguments followed from paper)
     parser.add_argument('--epochs', type=int, default=10,
                         help="number of rounds of training")
     parser.add_argument('--num_users', type=int, default=100,
@@ -25,6 +25,10 @@ def args_parser():
                         help='SGD momentum (default: 0.5)')
     parser.add_argument('--attack_frac',type=float, default=0.0, 
                         help='Fraction of malicous users')
+    parser.add_argument('--max_peers',type=int, default=3, 
+                    help='Max number of peers')
+    parser.add_argument('--opposit_frac',type=float, default=0.0, 
+                help='Fraction of dissimilar peers')
 
     # model arguments
     parser.add_argument('--model', type=str, default='mlp', help='model name')
