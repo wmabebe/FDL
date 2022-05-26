@@ -7,6 +7,7 @@ import torch
 from torchvision import datasets, transforms
 from sampling import mnist_iid, mnist_noniid, mnist_noniid_unequal
 from sampling import cifar_iid, cifar_noniid
+import numpy as np
 
 
 def get_dataset(args):
@@ -72,7 +73,7 @@ def get_dataset(args):
     return list(train_dataset), test_dataset, user_groups
 
 
-def average_weights(w):
+def average_weights(w,weights=None):
     """
     Returns the average of the weights.
     """
@@ -82,6 +83,32 @@ def average_weights(w):
             w_avg[key] += w[i][key]
         w_avg[key] = torch.div(w_avg[key], len(w))
     return w_avg
+
+def average_gradients(grads):
+    avg_grad = copy.deepcopy(grads[0])
+    for idx,grad in enumerate(grads):
+        if idx >= 1:
+            for name,layer in grad.items():
+                avg_grad[name] += layer
+    for name,layer in avg_grad.items():
+        avg_grad[name] /= len(grads)
+    return avg_grad
+
+#Flatten all layers of a gradient
+def flatten_layers(gradient):
+    X_flat = np.array([])
+    for name,layer in sorted(gradient.items()):
+        cur = np.array(layer,dtype=np.float64).flatten()
+        X_flat = np.concatenate((X_flat,cur),axis=0)
+    return X_flat
+
+#Calculate the radians between two gradients
+def get_radians(g1,g2):
+    unit_vector_1 = g1 / np.linalg.norm(g1) if np.linalg.norm(g1) != 0 else 0
+    unit_vector_2 = g2 / np.linalg.norm(g2) if np.linalg.norm(g2) != 0 else 0
+    dot_product = np.dot(unit_vector_1, unit_vector_2)
+    radians = np.arccos(dot_product)
+    return radians
 
 
 def exp_details(args):

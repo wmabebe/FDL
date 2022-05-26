@@ -1,6 +1,6 @@
-# Federated-Learning (PyTorch)
+# Fully Decentralized Learning (FDL) using PyTorch
 
-Implementation of the vanilla federated learning paper : [Communication-Efficient Learning of Deep Networks from Decentralized Data](https://arxiv.org/abs/1602.05629).
+This implementation cloned and converted the FL implementation in Federated-Learning (PyTorch) (https://github.com/AshwinRJ/Federated-Learning-PyTorch), to an FDL implementation.
 
 
 Experiments are produced on MNIST, Fashion MNIST and CIFAR10 (both IID and non-IID). In case of non-IID, the data amongst the users can be split equally or unequally.

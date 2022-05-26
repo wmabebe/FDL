@@ -9,14 +9,17 @@ import time
 import pickle
 import numpy as np
 from tqdm import tqdm
+import random
+from node import *
 
 import torch
 from tensorboardX import SummaryWriter
 
 from options import args_parser
-from update import LocalUpdate, test_inference
+from update import LocalUpdate, test_inference, ripple_updates
 from models import MLP, CNNMnist, CNNFashion_Mnist, CNNCifar, vgg11
-from utils import get_dataset, average_weights, exp_details
+from utils import get_dataset, average_weights, exp_details, average_gradients
+from node import color_graph
 
 
 if __name__ == '__main__':
@@ -30,12 +33,33 @@ if __name__ == '__main__':
     exp_details(args)
     print("args: ", args)
 
+    #Create output directory
+    dir_path = './save/{}_{}_users[{}]_rounds[{}]_frac[{}]_iid[{}]_local_ep[{}]_local_bs[{}]_attck_frac[{}]/'.format(args.dataset, args.model, args.num_users, args.epochs, args.frac, args.iid,
+               args.local_ep, args.local_bs,args.attack_frac)
+    os.makedirs(os.path.dirname(dir_path), exist_ok=True)
+
     # if args.gpu_id:
     #     torch.cuda.set_device(args.gpu_id)
-    device = 'cuda' if int(args.gpu) != 0 else 'cpu'
+    device = 'cuda' if args.gpu != None and int(args.gpu) != 0 else 'cpu'
+    print("Device: ",device)
 
     # load dataset and user groups
     train_dataset, test_dataset, user_groups = get_dataset(args)
+
+    MAX_PEERS = 3
+    NODES = args.num_users
+    NON_IID_FRAC = 0.3
+
+    adj_list = [Node(i,None,None,MAX_PEERS) for i in range(NODES)]
+
+    for idx,node in enumerate(adj_list):
+        #Assign node data idxs
+        node.data = user_groups[idx]
+        #Add random neighbors
+        while len(node.neighbors) < MAX_PEERS:
+            node.add_neighbors(random.sample(adj_list,MAX_PEERS))
+            if node in node.neighbors:
+                node.neighbors = []
 
     #Randomly set attackers
     attackers = []
@@ -52,11 +76,14 @@ if __name__ == '__main__':
     if args.model == 'cnn':
         # Convolutional neural netork
         if args.dataset == 'mnist':
-            global_model = CNNMnist(args=args)
+            for node in adj_list:
+                node.model = CNNMnist(args=args)
         elif args.dataset == 'fmnist':
-            global_model = CNNFashion_Mnist(args=args)
+            for node in adj_list:
+                node.model = CNNFashion_Mnist(args=args)
         elif args.dataset == 'cifar':
-            global_model = CNNCifar(args=args)
+            for node in adj_list:
+                node.model = CNNCifar(args=args)
 
     elif args.model == 'mlp':
         # Multi-layer preceptron
@@ -64,23 +91,23 @@ if __name__ == '__main__':
         len_in = 1
         for x in img_size:
             len_in *= x
-            global_model = MLP(dim_in=len_in, dim_hidden=64,
+            for node in adj_list:
+                node.model = MLP(dim_in=len_in, dim_hidden=64,
                                dim_out=args.num_classes)
     elif args.model == 'vgg':
         if args.dataset == 'cifar':
-            global_model = vgg11()
+            for node in adj_list:
+                node.model = vgg11()
         else:
             exit('Error: We only use VGG models for cifar dataset')
     else:
         exit('Error: unrecognized model')
 
-    # Set the model to train and send it to device.
-    global_model.to(device)
-    global_model.train()
-    print(global_model)
-
-    # copy weights
-    global_weights = global_model.state_dict()
+    # Set models to train and send to device.
+    for node in adj_list:
+        node.model.to(device)
+        node.model.train()
+        #print(node)
 
     # Training
     train_loss, train_accuracy = [], []
@@ -91,48 +118,59 @@ if __name__ == '__main__':
     total_grads = []
 
     for epoch in tqdm(range(args.epochs)):
-        local_weights, local_losses, local_grads = [], [], {}
+        local_weights, local_losses, local_grads = [], [], []
         print(f'\n | Global Training Round : {epoch+1} |\n')
 
-        global_model.train()
+        #global_model.train()
         m = max(int(args.frac * args.num_users), 1)
-        idxs_users = np.random.choice(range(args.num_users), m, replace=False)
+        idxs_nodes = np.random.choice(range(NODES), m, replace=False)
 
-        for idx in idxs_users:
+        for idx in idxs_nodes:
+            node = adj_list[idx]
             malicous = True if idx in attackers else False
             local_model = LocalUpdate(args=args, dataset=train_dataset,
-                                      idxs=user_groups[idx], logger=logger,attacker=malicous)
+                                      idxs=node.data, logger=logger,attacker=malicous)
             w, loss, grads = local_model.update_weights(
-                model=copy.deepcopy(global_model), global_round=epoch)
+                model=node.model, global_round=epoch)
             local_weights.append(copy.deepcopy(w))
             local_losses.append(copy.deepcopy(loss))
             #Append current user grads to local grads together with the label
-            local_grads[idx] = [copy.deepcopy(grads),int(malicous)]
+            local_grads.append(copy.deepcopy(grads))
 
         #Check if local_grads works
-        total_grads.append(copy.deepcopy(local_grads))
-        sample_idx  = list(local_grads.keys())[0]
-        print("1 device grad size: ", len( local_grads[sample_idx] ))
-        print("Round", epoch," grads: ", len(local_grads))
-        print("Total grads: ", len(total_grads))
+        # total_grads.append(copy.deepcopy(local_grads))
+        # sample_idx  = list(local_grads.keys())[0]
+        # print("1 device grad size: ", len( local_grads[sample_idx] ))
+        # print("Round", epoch," grads: ", len(local_grads))
+        # print("Total grads: ", len(total_grads))
 
         # update global weights
-        global_weights = average_weights(local_weights)
+        #global_weights = average_weights(local_weights)
 
         # update global weights
-        global_model.load_state_dict(global_weights)
+        # global_model.load_state_dict(global_weights)
+
+        #Compute average global gradient for computing node colors/similarity
+        global_gradient = average_gradients(local_grads)
+
+        colors = color_graph(adj_list,global_gradient)
+        
+        #Update p2p nodes
+        ripple_updates(adj_list,epoch,colors,dir_path,NON_IID_FRAC)
 
         loss_avg = sum(local_losses) / len(local_losses)
         train_loss.append(loss_avg)
 
         # Calculate avg training accuracy over all non-malicous users at every epoch
         list_acc, list_loss = [], []
-        global_model.eval()
-        for c in range(args.num_users):
+        
+        for c in range(NODES):
+            node = adj_list[c]
+            node.model.eval()
             if c not in attackers:
                 local_model = LocalUpdate(args=args, dataset=train_dataset,
-                                        idxs=user_groups[idx], logger=logger)
-                acc, loss = local_model.inference(model=global_model)
+                                        idxs=node.data, logger=logger)
+                acc, loss = local_model.inference(model=node.model)
                 list_acc.append(acc)
                 list_loss.append(loss)
         train_accuracy.append(sum(list_acc)/len(list_acc))
@@ -144,22 +182,24 @@ if __name__ == '__main__':
             print('Train Accuracy: {:.2f}% \n'.format(100*train_accuracy[-1]))
 
     # Test inference after completion of training
-    test_acc, test_loss = test_inference(args, global_model, test_dataset)
+    avg_test_acc, avg_test_loss = 0,0
+    for node in adj_list:
+        test_acc, test_loss = test_inference(args, node.model, test_dataset)
+        avg_test_acc += test_acc
+        avg_test_loss += test_loss
+    avg_test_acc /= len(adj_list)
+    avg_test_loss /= len(adj_list)
 
     print(f' \n Results after {args.epochs} global rounds of training:')
     print("|---- Avg Train Accuracy: {:.2f}%".format(100*train_accuracy[-1]))
-    print("|---- Test Accuracy: {:.2f}%".format(100*test_acc))
+    print("|---- Test Accuracy: {:.2f}%".format(100*avg_test_acc))
 
     # Saving the objects train_loss and train_accuracy:
-    file_name = './save/objects/{}_{}_users[{}]_rounds[{}]_frac[{}]_iid[{}]_local_ep[{}]_local_bs[{}]_attck_frac[{}]'.\
-        format(args.dataset, args.model, args.num_users, args.epochs, args.frac, args.iid,
-               args.local_ep, args.local_bs,args.attack_frac)
-
-    with open(file_name + ".pkl", 'wb') as f:
+    with open(dir_path + "train-loss-accuracy.pkl", 'wb') as f:
         pickle.dump([train_loss, train_accuracy], f)
     
-    with open(file_name + "_grads.pkl", 'wb') as f:
-        pickle.dump(total_grads,f)
+    # with open(dir_path + "train-loss-accuracy.pkl", 'wb') as f:
+    #     pickle.dump(total_grads,f)
 
     print('\n Total Run Time: {0:0.4f}'.format(time.time()-start_time))
 
@@ -182,7 +222,7 @@ if __name__ == '__main__':
     plt.plot(range(len(train_loss)), train_loss, color='r')
     plt.ylabel('Training loss')
     plt.xlabel('Communication Rounds')
-    plt.savefig(file_name_loss)
+    plt.savefig(dir_path + "loss.png")
     
     # Plot Average Accuracy vs Communication rounds
     plt.figure()
@@ -190,4 +230,4 @@ if __name__ == '__main__':
     plt.plot(range(len(train_accuracy)), train_accuracy, color='k')
     plt.ylabel('Average Accuracy')
     plt.xlabel('Communication Rounds')
-    plt.savefig(file_name_acc)
+    plt.savefig(dir_path + "acc.png")

@@ -7,6 +7,8 @@ from torch import nn
 from torch.utils.data import DataLoader, Dataset
 import random
 import copy
+from utils import average_weights
+from node import *
 
 
 class DatasetSplit(Dataset):
@@ -31,7 +33,7 @@ class LocalUpdate(object):
         self.logger = logger
         self.trainloader, self.validloader, self.testloader = self.train_val_test(
             dataset, list(idxs),attacker)
-        self.device = 'cuda' if int(args.gpu) != 0 else 'cpu'
+        self.device = 'cuda' if args.gpu != None and int(args.gpu) != 0 else 'cpu'
         # Default criterion set to NLL loss function
         self.criterion = nn.NLLLoss().to(self.device)
         #Add grads dictionary
@@ -137,7 +139,7 @@ def test_inference(args, model, test_dataset):
     model.eval()
     loss, total, correct = 0.0, 0.0, 0.0
 
-    device = 'cuda' if int(args.gpu) != 0 else 'cpu'
+    device = 'cuda' if args.gpu != None and int(args.gpu) != 0 else 'cpu'
     criterion = nn.NLLLoss().to(device)
     testloader = DataLoader(test_dataset, batch_size=128,
                             shuffle=False)
@@ -158,3 +160,26 @@ def test_inference(args, model, test_dataset):
 
     accuracy = correct/total
     return accuracy, loss
+
+def ripple_updates(adj_list,global_epoch,colors,dir_path=None,NON_IID_FRAC=None):
+    #Pick next candidates
+    for node in adj_list:
+        node.next_candidates()
+    
+    #Ripple updates with 1-hop neighbors
+    for node in adj_list:
+        local_weights = []
+        for neighbor in node.neighbors:
+            local_weights.append(copy.deepcopy(neighbor.model.state_dict()))
+        neighbors_weight = average_weights(local_weights)
+        aggregate_weight = average_weights([node.model.state_dict(),neighbors_weight])
+        node.model.load_state_dict(aggregate_weight)
+
+    #Update next neighbors
+    for node in adj_list:
+        node.next_peers(non_iid_frac=NON_IID_FRAC)
+    
+    #Draw round graph
+    graph = build_graph(adj_list,nx.DiGraph())
+    fname = dir_path + "G" + str(global_epoch) + ".png" if dir_path != None else "G" + str(global_epoch) + ".png"
+    draw_graph(graph,fname,colors)
