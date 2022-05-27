@@ -16,7 +16,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 
 import torch
-from tensorboardX import SummaryWriter
+#from tensorboardX import SummaryWriter
 
 from options import args_parser
 from update import LocalUpdate, test_inference, ripple_updates
@@ -30,7 +30,7 @@ if __name__ == '__main__':
 
     # define paths
     path_project = os.path.abspath('..')
-    logger = SummaryWriter('../logs')
+    #logger = SummaryWriter('../logs')
 
     args = args_parser()
     exp_details(args)
