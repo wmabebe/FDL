@@ -138,7 +138,7 @@ if __name__ == '__main__':
             node = adj_list[idx]
             malicous = True if idx in attackers else False
             local_model = LocalUpdate(args=args, dataset=train_dataset,
-                                      idxs=node.data, logger=logger,attacker=malicous)
+                                      idxs=node.data, logger=None,attacker=malicous)
             w, loss, grads = local_model.update_weights(
                 model=node.model, global_round=epoch)
             local_weights.append(copy.deepcopy(w))
