@@ -1,11 +1,9 @@
 # Fully Decentralized Learning (FDL) using PyTorch
 
-This implementation cloned and converted the FL implementation in Federated-Learning (PyTorch) (https://github.com/AshwinRJ/Federated-Learning-PyTorch), to an FDL implementation.
+This implementation cloned and converted the FL implementation in "Federated-Learning (PyTorch)" (https://github.com/AshwinRJ/Federated-Learning-PyTorch), to an FDL implementation.
 
 
-Experiments are produced on MNIST, Fashion MNIST and CIFAR10 (both IID and non-IID). In case of non-IID, the data amongst the users can be split equally or unequally.
-
-Since the purpose of these experiments are to illustrate the effectiveness of the federated learning paradigm, only simple models such as MLP and CNN are used.
+Experiments are produced on MNIST, Fashion MNIST and CIFAR10 (both IID and non-IID). In case of non-IID, the data amongst the users can be split equally or unequally. Additionaly, VGG implemnation has been adopted from https://github.com/chengyangfu/pytorch-vgg-cifar10/. 
 
 ## Requirments
 Install all the packages from requirments.txt
@@ -55,10 +53,13 @@ The default values for various paramters parsed to the experiment are given in `
 * ```--verbose:```  Detailed log outputs. Activated by default, set to 0 to deactivate.
 * ```--seed:```     Random Seed. Default set to 1.
 
-#### Federated Parameters
+#### FDL Parameters
 * ```--iid:```      Distribution of data amongst users. Default set to IID. Set to 0 for non-IID.
-* ```--num_users:```Number of users. Default is 100.
-* ```--frac:```     Fraction of users to be used for federated updates. Default is 0.1.
+* ```--num_users:```Number of nodes. Default is 100.
+* ```--max_peers:```Number of peers.
+* ```--opposit_frac:```Fraction of peers with dissimilar gradients.
+* ```--opposit_strategy:```Dissimilariy strategy. 'extreme','random' default is 'random'.
+* ```--frac:```     Fraction of users to be used for federated updates. Default is 1.
 * ```--attack_frac:```     Fraction of malicous users in the federated learning. Default is 0.0.
 * ```--local_ep:``` Number of local training epochs in each user. Default is 10.
 * ```--local_bs:``` Batch size of local updates in each user. Default is 10.

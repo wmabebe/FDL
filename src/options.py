@@ -29,6 +29,8 @@ def args_parser():
                     help='Max number of peers')
     parser.add_argument('--opposit_frac',type=float, default=0.0, 
                 help='Fraction of dissimilar peers')
+    parser.add_argument('--opposit_strategy',type=str, default="random", 
+            help='Dissimilarity strategy')
 
     # model arguments
     parser.add_argument('--model', type=str, default='mlp', help='model name')

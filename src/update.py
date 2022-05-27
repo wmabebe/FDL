@@ -161,7 +161,7 @@ def test_inference(args, model, test_dataset):
     accuracy = correct/total
     return accuracy, loss
 
-def ripple_updates(adj_list,global_epoch,colors,dir_path=None,NON_IID_FRAC=None):
+def ripple_updates(adj_list,global_epoch,colors,dir_path=None,NON_IID_FRAC=None,OPPOSIT_STRATEGY="random"):
     #Pick next candidates
     for node in adj_list:
         node.next_candidates()
@@ -177,7 +177,7 @@ def ripple_updates(adj_list,global_epoch,colors,dir_path=None,NON_IID_FRAC=None)
 
     #Update next neighbors
     for node in adj_list:
-        node.next_peers(non_iid_frac=NON_IID_FRAC)
+        node.next_peers(non_iid_frac=NON_IID_FRAC,non_iid_strategy=OPPOSIT_STRATEGY)
     
     #Draw round graph
     graph = build_graph(adj_list,nx.DiGraph())

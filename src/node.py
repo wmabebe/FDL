@@ -86,8 +86,8 @@ class Node:
     #non_iid_frac > 0. Worst strategy, picks the most disimilar
     #peers when non_iid_frac > 0.
     def next_peers(self,non_iid_frac=0,non_iid_strategy="random"):
-        if non_iid_strategy not in ["random","worst"]:
-            raise Exception("non_iid_strategy should be either 'random' or 'worst'!")
+        if non_iid_strategy not in ["random","extreme"]:
+            raise Exception("non_iid_strategy should be either 'random' or 'extreme'!")
         if non_iid_frac > 1 or non_iid_frac < 0:
             raise Exception("non_iid_frac has to be a value between [0,1]. " + str(non_iid_frac) + " given!")
         if len(self.candidates) <= 0:
@@ -98,7 +98,7 @@ class Node:
             non_iid_size = math.ceil(non_iid_frac * self.max_peers)
             if non_iid_size <= len(self.candidates[self.max_peers:]):
                 #Graft most disimilar non-iid peer
-                if non_iid_strategy == "worst":
+                if non_iid_strategy == "extreme":
                     self.neighbors[self.max_peers - non_iid_size:] = self.candidates[-non_iid_size:]
                 #Graft random non-iid peer
                 elif non_iid_strategy == "random":
