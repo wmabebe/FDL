@@ -50,7 +50,7 @@ if __name__ == '__main__':
     NODES = args.num_users
     OPPOSIT_FRAC = args.opposit_frac
     NOW = str(datetime.datetime.now()).replace(" ","--")
-    IID = "IID" if args.iid == "1" else "NON-IID"
+    IID = "IID" if args.iid == 1 else "NON-IID"
 
     #Create output directory
     dir_path = './save/{}_{}_{}_{}_nodes[{}]_maxpeers[{}]_rounds[{}]_noniidfrac[{}]_frac[{}]_local_ep[{}]_local_bs[{}]_attck_frac[{}]/'. \
@@ -198,7 +198,7 @@ if __name__ == '__main__':
     avg_test_acc /= len(adj_list)
     avg_test_loss /= len(adj_list)
 
-    summary = "Results after " + str(args.epochs) + "global rounds of training:" + \
+    summary = "Results after " + str(args.epochs) + " global rounds of training:" + \
              "\n|---- Avg Train Accuracy: {:.2f}%".format(100*train_accuracy[-1]) + \
             "\n|---- Avg Test Accuracy: {:.2f}%".format(100*avg_test_acc)
     
