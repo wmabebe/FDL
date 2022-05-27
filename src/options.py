@@ -31,6 +31,8 @@ def args_parser():
                 help='Fraction of dissimilar peers')
     parser.add_argument('--opposit_strategy',type=str, default="random", 
             help='Dissimilarity strategy')
+    parser.add_argument('--clump',type=str, default="static", 
+            help='Clumping strategy')
 
     # model arguments
     parser.add_argument('--model', type=str, default='mlp', help='model name')

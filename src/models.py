@@ -109,8 +109,8 @@ class CNNCifar(nn.Module):
         return F.log_softmax(x, dim=1)
     
     def stash_grads(self):
-        self.grads['conv1'] = np.copy(self.conv1.weight.grad.numpy())
-        self.grads['conv2'] = np.copy(self.conv2.weight.grad.numpy())
+        self.grads['conv1'] = np.copy(self.conv1.weight.grad.cpu().clone().numpy())
+        self.grads['conv2'] = np.copy(self.conv2.weight.grad.cpu().clone().numpy())
         # self.grads['fc1'].append(np.copy(self.fc1.weight.grad.numpy()))
         # self.grads['fc2'].append(np.copy(self.fc2.weight.grad.numpy()))
         # self.grads['fc3'].append(np.copy(self.fc3.weight.grad.numpy()))
