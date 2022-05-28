@@ -33,6 +33,8 @@ def args_parser():
             help='Dissimilarity strategy')
     parser.add_argument('--clump',type=str, default="static", 
             help='Clumping strategy')
+    parser.add_argument('--clump_interval',type=int, default=10, 
+            help='Clumping interval')
 
     # model arguments
     parser.add_argument('--model', type=str, default='mlp', help='model name')

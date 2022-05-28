@@ -53,11 +53,10 @@ if __name__ == '__main__':
     OPPOSIT_STRATEGY = args.opposit_strategy
     IID = "IID" if args.iid == 1 else "NON-IID"
     CLUMP_STRATEGY = args.clump
-    CLUMP_INTERVAL = args.clump_interval
 
     #Create output directory
-    dir_path = './save/{}_{}_{}_{}_nodes[{}]_maxpeers[{}]_clump[{}]_clumpInterval[{}]_rounds[{}]_noniidfrac[{}]_strategy[{}]_frac[{}]_local_ep[{}]_local_bs[{}]_attck_frac[{}]/'. \
-        format(NOW,args.dataset, args.model, IID, NODES, MAX_PEERS,CLUMP_STRATEGY,CLUMP_INTERVAL, args.epochs,OPPOSIT_FRAC,OPPOSIT_STRATEGY, args.frac,args.local_ep, args.local_bs,args.attack_frac)
+    dir_path = './save/{}_{}_{}_{}_nodes[{}]_maxpeers[{}]_clump[{}]_rounds[{}]_noniidfrac[{}]_strategy[{}]_frac[{}]_local_ep[{}]_local_bs[{}]_attck_frac[{}]/'. \
+        format(NOW,args.dataset, args.model, IID, NODES, MAX_PEERS,CLUMP_STRATEGY, args.epochs,OPPOSIT_FRAC,OPPOSIT_STRATEGY, args.frac,args.local_ep, args.local_bs,args.attack_frac)
     os.makedirs(os.path.dirname(dir_path), exist_ok=True)
 
     #Initialize the p2p graph
@@ -172,7 +171,7 @@ if __name__ == '__main__':
         colors = color_graph(adj_list,global_gradient)
         
         #Update p2p nodes
-        ripple_updates(adj_list,epoch,colors,dir_path,OPPOSIT_FRAC,CLUMP_STRATEGY,CLUMP_INTERVAL,OPPOSIT_STRATEGY)
+        ripple_updates(adj_list,epoch,colors,dir_path,OPPOSIT_FRAC,CLUMP_STRATEGY,OPPOSIT_STRATEGY)
 
         loss_avg = sum(local_losses) / len(local_losses)
         train_loss.append(loss_avg)

@@ -161,10 +161,11 @@ def test_inference(args, model, test_dataset):
     accuracy = correct/total
     return accuracy, loss
 
-def ripple_updates(adj_list,global_epoch,colors,dir_path=None,NON_IID_FRAC=None,CLUMP_STRATEGY="static",OPPOSIT_STRATEGY="random"):
+def ripple_updates(adj_list,global_epoch,colors,dir_path=None,
+    NON_IID_FRAC=None,CLUMP_STRATEGY="static",CLUMP_INTERVAL=10,OPPOSIT_STRATEGY="random"):
     
     #If clumping applied
-    if CLUMP_STRATEGY == "dynamic":
+    if CLUMP_STRATEGY == "dynamic" and (global_epoch + 1) % CLUMP_INTERVAL == 0:
         #Pick next candidates
         for node in adj_list:
             node.next_candidates()
@@ -179,7 +180,7 @@ def ripple_updates(adj_list,global_epoch,colors,dir_path=None,NON_IID_FRAC=None,
         node.model.load_state_dict(aggregate_weight)
 
     #If clumping applied
-    if CLUMP_STRATEGY == "dynamic":
+    if CLUMP_STRATEGY == "dynamic" and (global_epoch + 1) % CLUMP_INTERVAL == 0:
         #Update next neighbors
         for node in adj_list:
             node.next_peers(non_iid_frac=NON_IID_FRAC,non_iid_strategy=OPPOSIT_STRATEGY)

@@ -58,6 +58,7 @@ The default values for various paramters parsed to the experiment are given in `
 * ```--num_users:```Number of nodes. Default is 100.
 * ```--max_peers:```Number of peers.
 * ```--clump:```Peer clumping strategy. 'static' or 'dynamic', default is 'static'
+* ```--clump_interval:```Clumping interval. Default=10.
 * ```--opposit_frac:```Fraction of peers with dissimilar gradients.
 * ```--opposit_strategy:```Dissimilariy strategy. 'extreme','random' default is 'random'.
 * ```--frac:```     Fraction of users to be used for federated updates. Default is 1.
