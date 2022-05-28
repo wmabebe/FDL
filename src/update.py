@@ -168,7 +168,7 @@ def ripple_updates(adj_list,global_epoch,colors,dir_path=None,NON_IID_FRAC=None,
         #Pick next candidates
         for node in adj_list:
             node.next_candidates()
-            
+
     #Ripple updates with 1-hop neighbors
     for node in adj_list:
         local_weights = []
@@ -186,5 +186,5 @@ def ripple_updates(adj_list,global_epoch,colors,dir_path=None,NON_IID_FRAC=None,
         
         #Draw round graph
         graph = build_graph(adj_list,nx.DiGraph())
-        fname = dir_path + "G" + str(global_epoch) + ".png" if dir_path != None else "G" + str(global_epoch) + ".png"
+        fname = dir_path + "G" + str(global_epoch + 1) + ".png" if dir_path != None else "G" + str(global_epoch + 1) + ".png"
         draw_graph(graph,fname,colors)

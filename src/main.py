@@ -70,6 +70,11 @@ if __name__ == '__main__':
             node.add_neighbors(random.sample(adj_list,MAX_PEERS))
             if node in node.neighbors:
                 node.neighbors = []
+    
+    #Draw round 0 graph
+    graph = build_graph(adj_list,nx.DiGraph())
+    fname = dir_path + "G0.png" if dir_path != None else "G0.png"
+    draw_graph(graph,fname)
 
     #Randomly set attackers
     attackers = []
