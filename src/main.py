@@ -51,7 +51,7 @@ if __name__ == '__main__':
     OPPOSIT_FRAC = args.opposit_frac
     NOW = str(datetime.datetime.now()).replace(" ","--")
     OPPOSIT_STRATEGY = args.opposit_strategy
-    IID = "IID" if args.iid == 1 else "NON-IID"
+    IID = args.partition
     CLUMP_STRATEGY = args.clump
     CLUMP_INTERVAL = args.clump_interval
 

@@ -54,11 +54,11 @@ The default values for various paramters parsed to the experiment are given in `
 * ```--seed:```     Random Seed. Default set to 1.
 
 #### FDL Parameters
-* ```--iid:```      Distribution of data amongst users. Default set to IID. Set to 0 for non-IID.
+* ```--partition:``` Data distribution amongst nodes. Default set to "homo" (IID). Options include [noniid-labeldir,(noniid-#label1,noniid-#label2...), real, iid-diff-quantity].
 * ```--num_users:```Number of nodes. Default is 100.
 * ```--max_peers:```Number of peers.
 * ```--clump:```Peer clumping strategy. 'static' or 'dynamic', default is 'static'
-* ```--clump_interval:```Clumping interval. Default=10.
+* ```--clump_interval:```Clumping interval. Default=1.
 * ```--opposit_frac:```Fraction of peers with dissimilar gradients.
 * ```--opposit_strategy:```Dissimilariy strategy. 'extreme','random' default is 'random'.
 * ```--frac:```     Fraction of users to be used for federated updates. Default is 1.

@@ -6,7 +6,7 @@ import copy
 import torch
 from torchvision import datasets, transforms
 from sampling import mnist_iid, mnist_noniid, mnist_noniid_unequal
-from sampling import cifar_iid, cifar_noniid
+from sampling import cifar_iid, cifar_noniid, partition_data
 import numpy as np
 
 
@@ -29,7 +29,7 @@ def get_dataset(args):
                                       transform=apply_transform)
 
         # sample training data amongst users
-        if args.iid:
+        if args.partition == "homo":
             # Sample IID user data from Mnist
             user_groups = cifar_iid(train_dataset, args.num_users)
         else:
@@ -39,7 +39,8 @@ def get_dataset(args):
                 raise NotImplementedError()
             else:
                 # Chose euqal splits for every user
-                user_groups = cifar_noniid(train_dataset, args.num_users)
+                #user_groups = cifar_noniid(train_dataset, args.num_users)
+                _,_,_,_,user_groups,_ = partition_data("cifar10", "./data", "./logs", "noniid-labeldir", args.num_users, beta=0.4)
 
     elif args.dataset == 'mnist' or 'fmnist':
         if args.dataset == 'mnist':
@@ -58,7 +59,7 @@ def get_dataset(args):
                                       transform=apply_transform)
 
         # sample training data amongst users
-        if args.iid:
+        if args.partition == "homo":
             # Sample IID user data from Mnist
             user_groups = mnist_iid(train_dataset, args.num_users)
         else:
@@ -66,9 +67,11 @@ def get_dataset(args):
             if args.unequal:
                 # Chose uneuqal splits for every user
                 user_groups = mnist_noniid_unequal(train_dataset, args.num_users)
+                # _,_,_,_,user_groups,_ = partition_data("cifar10", "./data", "./logs", "noniid-labeldir", args.num_users, beta=0.4)
             else:
-                # Chose euqal splits for every user
-                user_groups = mnist_noniid(train_dataset, args.num_users)
+                # Chose equal splits for every user
+                #user_groups = mnist_noniid(train_dataset, args.num_users)
+                 _,_,_,_,user_groups,_ = partition_data("mnist", "./data", "./logs", "noniid-labeldir", args.num_users, beta=0.4)
 
     return list(train_dataset), test_dataset, user_groups
 
@@ -119,7 +122,7 @@ def exp_details(args):
     print(f'    Global Rounds   : {args.epochs}\n')
 
     print('    Federated parameters:')
-    if args.iid:
+    if args.partition:
         print('    IID')
     else:
         print('    Non-IID')

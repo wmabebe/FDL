@@ -3,4 +3,5 @@ __pycache__/
 save/
 .pkl
 .png
+data/
 
