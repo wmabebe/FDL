@@ -1,0 +1,5 @@
+ml-gpu python3 ./src/main.py --model=cnn --partition=noniid-labeldir --dataset=cifar --epochs=50 --num_users=10 --max_peers=3 --clump=static
+ml-gpu python3 ./src/main.py --model=cnn --partition=noniid-labeldir --dataset=cifar --epochs=50 --num_users=10 --max_peers=3 --clump=dynamic --opposit_strategy=random --opposit_frac=0.3
+ml-gpu python3 ./src/main.py --model=cnn --partition=noniid-labeldir --dataset=cifar --epochs=50 --num_users=10 --max_peers=3 --clump=dynamic --opposit_strategy=extreme --opposit_frac=0.3
+ml-gpu python3 ./src/main.py --model=cnn --partition=noniid-labeldir --dataset=cifar --epochs=50 --num_users=10 --max_peers=3 --clump=dynamic --opposit_strategy=random --opposit_frac=0.6
+ml-gpu python3 ./src/main.py --model=cnn --partition=noniid-labeldir --dataset=cifar --epochs=50 --num_users=10 --max_peers=3 --clump=dynamic --opposit_strategy=extreme --opposit_frac=0.6
