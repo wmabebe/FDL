@@ -110,7 +110,7 @@ if __name__ == '__main__':
             for node in adj_list:
                 node.model = MLP(dim_in=len_in, dim_hidden=64,
                                dim_out=args.num_classes)
-    elif args.model == 'vgg':
+    elif args.model == 'vgg11':
         if args.dataset == 'cifar':
             for node in adj_list:
                 node.model = vgg11()
@@ -196,6 +196,19 @@ if __name__ == '__main__':
             print(f' \nAvg Training Stats after {epoch+1} global rounds:')
             print(f'Training Loss : {np.mean(np.array(train_loss))}')
             print('Train Accuracy: {:.2f}% \n'.format(100*train_accuracy[-1]))
+    
+    local_test_list_acc, local_test_list_loss = [], []
+        
+    for c in range(NODES):
+        node = adj_list[c]
+        node.model.eval()
+        if c not in attackers:
+            local_model = LocalUpdate(args=args, dataset=train_dataset,
+                                    idxs=node.data, logger=None)
+            acc, loss = local_model.inference(model=node.model,data="test")
+            local_test_list_acc.append(acc)
+            local_test_list_loss.append(loss)
+    local_test_accuracy = sum(local_test_list_acc)/len(local_test_list_acc)
 
     # Test inference after completion of training
     avg_test_acc, avg_test_loss = 0,0
@@ -206,9 +219,16 @@ if __name__ == '__main__':
     avg_test_acc /= len(adj_list)
     avg_test_loss /= len(adj_list)
 
-    summary = "Results after " + str(args.epochs) + " global rounds of training:" + \
-             "\n|---- Avg Train Accuracy: {:.2f}%".format(100*train_accuracy[-1]) + \
-            "\n|---- Avg Test Accuracy: {:.2f}%".format(100*avg_test_acc)
+    summary = "Results after " + str(args.epochs) + " global rounds of training." + \
+            '\ndate: {}\ndataset: {}\nmodel: {}\npartition: {}\nnodes: {}\nmaxpeers: {}' \
+            '\nclump: {}\nclumpInterval: {}\nrounds: {}\nnoniidfrac: {}' \
+            '\nstrategy: {}\nfrac: {}\nlocal_ep: {}\nlocal_bs: {}\nattck_frac{}' \
+        .format(NOW,args.dataset, args.model, IID, NODES, MAX_PEERS,CLUMP_STRATEGY,CLUMP_INTERVAL, 
+        args.epochs,OPPOSIT_FRAC,OPPOSIT_STRATEGY, args.frac,args.local_ep,
+        args.local_bs,args.attack_frac) + \
+            "\n\n|---- Avg train accuracy: {:.2f}%".format(100*train_accuracy[-1]) + \
+            "\n|---- Avg local test accuracy: {:.2f}%".format(100*local_test_accuracy) + \
+            "\n|---- Avg global test accuracy: {:.2f}%".format(100*avg_test_acc)
     
     print(summary)
 

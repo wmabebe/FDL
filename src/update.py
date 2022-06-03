@@ -107,14 +107,14 @@ class LocalUpdate(object):
 
         return model.state_dict(), sum(epoch_loss) / len(epoch_loss), self.grads
 
-    def inference(self, model):
+    def inference(self, model,data="train"):
         """ Returns the inference accuracy and loss.
         """
 
         model.eval()
         loss, total, correct = 0.0, 0.0, 0.0
 
-        for batch_idx, (images, labels) in enumerate(self.testloader):
+        for batch_idx, (images, labels) in enumerate(self.trainloader if data == "train" else self.testloader):
             images, labels = images.to(self.device), labels.to(self.device)
 
             # Inference
