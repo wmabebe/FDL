@@ -210,8 +210,9 @@ class VGG(nn.Module):
     def stash_grads(self):
         counter = 1
         for m in self.modules():
-            self.grads['conv' + str(counter)] = np.copy(m.weight.grad.numpy())
-            counter += 1
+            if isinstance(m, nn.Conv2d):
+                self.grads['conv' + str(counter)] = np.copy(m.weight.grad.numpy())
+                counter += 1
 
 def make_layers(cfg, batch_norm=False):
     layers = []
