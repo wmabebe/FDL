@@ -211,7 +211,7 @@ class VGG(nn.Module):
         counter = 1
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
-                self.grads['conv' + str(counter)] = np.copy(m.weight.grad.numpy())
+                self.grads['conv' + str(counter)] = np.copy(m.weight.grad.cpu().clone().numpy())
                 counter += 1
 
 def make_layers(cfg, batch_norm=False):
